@@ -1,303 +1,185 @@
-
-  
- /*  	document.addEventListener("DOMContentLoaded", function(event) {
-		console.log("DOM fully loaded and parsed");
-		init();
-	});   */ 
-	
-
-
-//dom selectors and tool for clearing dom
-
-var elRaft = document.getElementsByClassName("raft")[0];
-var elPlayer = document.getElementsByClassName("player")[0];
-var elContext = document.getElementsByClassName("context")[0];
-var domArr = [elRaft, elPlayer, elContext];
-  
-  
-function domUpdate(){
-	var elRaft = document.getElementsByClassName("raft")[0];
-	var elPlayer = document.getElementsByClassName("player")[0];
-	var  elContext = document.getElementsByClassName("context")[0];
-	var domArr = [elRaft, elPlayer, elContext];
- }
-
-function domClear() {
-	for (var i= 0; i < domArr.length; i++) {
-		while(domArr[i].firstChild){
-			domArr[i].removeChild(domArr[i].firstChild);
-	  }
-	}
-}	
-	  
-  
-	//tools
-var randomizer = function(min, max) { 
-	return Math.floor(Math.random()*((max-min) +1)) + min;
+alert("We're doing it live");
+var randomizer = function (min, max){
+  return Math.floor(Math.random()*((max-min) +1)) + min;
 };
+
+
+//This function creates the headers, array not in use yet
+var headerArray = ["raft", "description", "options"];
+
+function init(){
+  for (var i = 0; i < arguments.length; i++){
+    var t;
+    var nodeParent = document.createElement("UL");
+    nodeParent.setAttribute("class", arguments[i]);
+    t = document.createTextNode(arguments[i]);
+    nodeParent.appendChild(t);
+    document.body.appendChild(nodeParent);
+  }
+}
+
+init("raft", "description", "options");
+
+//Stat variables (alt. to object literal)
+var currentStats = [111, 111, 111, 56, 10];
+var statNames = ["food", "water", "hull", "morale", "crew"];
+var currentDay = 0;
+var currentEvent;
+var currentWeather = "the weather is good,";
+var actionCounter = 5;
+var sCounter = 0;
+var currentDistance = 220;
+
+//option constructor 
+function OptionC (name, action, addnow){
+  this.parent = "options";
+  this.name = name;
+  this.action = action;
+  if (addnow){
+    this.domadd();
+  }
+}
+
+//this method keeps the dom in alignment with options, so far
+OptionC.prototype.domadd = function(){
+  var t;
+  var node = document.createElement("LI");
+  node.setAttribute("class", "optchild"); 
+// if node is set to LI node.href = "#" doesn't work
+//but if node is set to A, list line breaks don't work
+  t = document.createTextNode(this.name);
+  node.appendChild(t);
+  node.addEventListener("click", this.action, false);
+  var par = document. getElementsByClassName("options")[0];
+  par.appendChild(node);
+};
+
+//constructor created options
+var fishing = new OptionC("fishing", function(){
+  currentStats[0] += 1;
+  currentEvent = "After several hours of frustration, I caught a small fish.";
+  updater();
+}, true);
+                       
+var inspiring = new OptionC("inspiring", function(){
+  currentStats[3] += 1;
+  currentEvent = "I gave a rousing speech, reminding everyone of their patriotic duty to obey my orders at all times with no regard for their personal safety. If that doesn't inspire this crew, nothing will.";
+  updater();
+}, true);
+
+var repairing = new OptionC("repairing", function(){
+  currentStats[2] += 1;
+  currentEvent = "I directed the crew to make repairs. There are still gaps in the hull, but not on any of the parts where I sleep.";
+  updater();
+}, true);
+
+//subOptions
+
+var secretly = new OptionC ("Secretly push someone overboard", function(){
+  if (randomizer (1, 2) === 2){
+    currentStats[4] -= 1;
+    currentStats[3] -=5;
+    currentEvent = "When everyone else was distracted I discreetly pushed one of the crew overboard and he was quickly lost. The needs of the many outweigh the needs of the one, especially when the one isn't me.";
+    
+  } else {
+    currentStats[4] -= 1;
+    currentStats[3]-= 25;
+    currentEvent = "The crew member I pushed resisted mightly and made quite a commotion before going overboard. Some people are just selfish. There's been some grumbling, but I'm sure the men will soon forget this little incident.";
+  }
+  optsclear();
+  updater();
+}, false);
+
+var drawstraws = new OptionC ("Order the men to draw straws", function(){
+  currentStats[4] -= 1;
+  currentStats[3] -= 10;
+  currentEvent = "The crew has reluctantly agreed to my plan, and we are now one fewer.";
+  optsclear();
+  updater();
+}, false);
+
+//option arrays                             
+var currentOptions = defaultOptions;
+var defaultOptions = [fishing, inspiring, repairing];
+var underHalfOptions = [secretly, drawstraws]; 
+
+
+//clears options, used with special suboptions
+function optsclear(){ 
+  var optshold = document.getElementsByClassName("options")[0];
+  while(optshold.childNodes.length > defaultOptions.length + 1){
+    optshold.removeChild(optshold.lastChild);
+  }
+}                                
+
+//The updater draws the DOM and counts actions
+function updater (){
+  var statshold = document.getElementsByClassName("raft")[0];
+  while(statshold.childNodes.length > 1){
+        statshold.removeChild(statshold.lastChild);
+  }
+
+  currentStats.forEach(function(value, index, array){
+    var t;
+    var node = document.createElement("LI");
+    node.setAttribute("class", "raftchild"); 
+    t = document.createTextNode(statNames[index] + ": " + value);
+    node.appendChild(t);
+    var par = document.getElementsByClassName("raft")[0];
+    par.appendChild(node);
+    });
+    actionCounter--;
+    var desc = document.getElementsByClassName("description")[0];
+    var sorp = "things";
+    var timeof = ", morning: ";
+    if (actionCounter === 2){
+      timeof = ", afternoon: ";
+  }
+  if (actionCounter === 1){
+    timeof = ", evening: ";
+    sorp = "thing";
+  }
+  desc.textContent = "Day " + currentDay + " captain's log" + timeof + currentWeather +  " and I think we're approximately " + currentDistance + " miles from land. " + currentEvent + " " + " I feel like there's enough time to do " + actionCounter + " more " + sorp + " today.";
+  if (actionCounter === 0){
+    rules();
+  }
+}
+
+//rules
+function rules(){
+  var i;
+  currentDistance -= 20;
+  currentDay++;
+  if (currentDistance <= 0){
+    document.body.innerHTML = "<h1>" + "You Made It!" + "</h1>" + "<h3>" + "You reached land on day " + currentDay +   " with a crew of " + currentStats[4] + " and overall morale of " + currentStats[3] + ". Your total score is " + (currentStats[4] * currentStats[3]) + "." + "</h3>";
+  }
+  currentEvent = "It's a new day aboard the raft, filled with the promise of adventure and the vague hope that we're actually going in the right direction.";
+  actionCounter = 4;
   
-	
-//pseudo-global variables
-var person;
-var count = -1;
-var day = 1;
-var currentEvent = 0;
-var survivorArray = [];
-var currentWeather = "The weather is fine, but you're probably still going to die.";
-var survLen = survivorArray.length;
-var nameList = ["Ismael", "Francois", "Greg", "Lumpy", "Albert",  "Vadim", "Alain", "Peter", "Tomas", "Henri", "James", "Tyler", "Phillipe", "Louis", "Max", "Richard", "Jean", "Patrice"];
-var nameListLast = ["Badiou","Janech", "Mitter", "Depaul", "Fitzroy", "Michel", "Simon", "Morell", "Roux", "Dupont", "Arceneau", "Babin", "Bergeron", "Bernard", "Bertrand"];
-var currentEvent = "Who would've thought coral reefs were so hard to see? Not you, that's for sure. You and a few other survivors managed to create a crude raft, and all you have to do is sail it to shore. ";
-  
-  
-//Survivor Creator  
-function Survivor (){
-	this.health = randomizer(3, 5);
-	this.morale = randomizer(3, 5);
-	this.hunger = 0;
-	this.thirst = 0;
-	this.alive = true;
-	this.combatValue = this.health * 2;
-	this.name = nameList[randomizer(0, nameList.length-1)] + " " + nameListLast[randomizer(0, nameListLast.length-1)];
+    if (currentStats[0] <= 50 && currentStats[1] <= 50 && sCounter === 0){
+    sCounter = 1;
+    currentEvent = "I can't help but notice that we're down to less than 50% of our starting provisions. I think it's time to lighten our load. ";
+      for (i = 0; i < underHalfOptions.length; i++);{
+        underHalfOptions[i].domadd();     
+      }
    }
-
-   
- //Raft, Crew/Player, Context Sate
-
-var fwh = [50, 50, 20];
-var morale = 50;
-var toShore = 200;
-function stateHold(){
-	var state = {
-		raft: {
-			"food": fwh[0],
-			"water": fwh[1],
-			"hull": fwh[2],
-			"onboard": survivorArray.length,
-			"morale":  0,
-			"distance": toShore
-		},
-		context: {
-			situation: "Day " + day +", " + currentEvent + " " + currentWeather
-		}
-  };
-}
-
-
-
-var survPush = function() {
-	for (var i = 0; i < 10; i++) {
-		survivorArray.push(new Survivor());
-		state.raft.onboard = survivorArray.length;
-	}
-};  
-
-
-function stateUpdate (obj) {   
- 
-	function drawUpdate(element, index, array) {
-	  
-		if (typeof  obj[element] === "number" || typeof  obj[element] === "string") {
-			stateEntry = document.createElement("div");
-			stateEntry.innerHTML = "<span>" + array[index] + ": " + obj[element] + "</span>";
-	   		domArr[count].appendChild(stateEntry);
-		}
-		if (typeof obj[element] === 'object') {
-			alert(array[index].toUpperCase());
-			count++;
-			stateEntry = document.createElement("h4");
-			stateEntry.innerHTML = "<span>" + array[index].toUpperCase() + "</span>";
-			domArr[count].appendChild(stateEntry);
-			return stateUpdate(obj[element]);  
-		}
-		return state;  
-	} 
-
-	Object.keys(obj).forEach(drawUpdate);   
-}
-
-// display opt begin!!!
-
-var handlers = [];
-
-
-function OptionC(name, text, funct) {
-	this.name = name;
-	this.text = text;
-	this.funct = funct;
-	this.contexter = function(event, weather){
-		state.context.situation = "Day " + day +", Captain's log " + event + " " + weather;
-	};  
-   
-}
-
-var fishing = new OptionC("Fishing", "You spend the day trying to fish", function (){
-	var result = state.raft.food += randomizer(0, 2);
-	if (result > 0) {
-		state.context.situation = "You caught some fish!";
-	} else {
-		state.context.event = "You spent all day trying, but didn't manage to catch anything.";
-	}
-	count = -1;
-	combiner();
-  }); 
-
-
-
-var motivating = new OptionC("Motivate the Crew", "You spend the day trying to motivate the crew", function (){
-	var result = state.player.morale += randomizer(0, 2);
-	result = state.player.morale;    
-	if (result > 0){
-		state.context.situation = "The other survivors have been inspired by your leadership";
-	} else {
-		state.context.situation = "You gave a really good speech, but it didn't seem like anyone was listening to you";
-	}
-	count = -1;
-	combiner();
-}); 
-
-var nextTurn = {
-	text: "Next Turn",
-	contexter: function(event, weather){
-		state.context.situation = "Day " + day +", Captain's log " + event + " " + weather;
-	},
-	funct: function(){
-		state.raft.food -= survivorArray.length;
-		state.raft.water -= survivorArray.length;
-		state.raft.hull -= 2;
-		state.raft.distance -= 10;
-		state.player.hunger++;
-		state.player.thirst++;
-		count = -1;
-		combiner();
-	}
- };
-
- /*{ DELETE PROBABLY
-  this.text = "Try to fish";
-   this.funct = state.raft.food -= survivorArray.length;
-	state.raft.water -= survivorArray.length;
-	state.raft.hull -= 2;
-	state.raft.distance -= 10;
-	state.player.hunger++;
-	state.player.thirst++;
-	fishing();
-} */
-
-
-
-var newGame = {
-	text: "Start a new game",
-	funct: function() {
-		state.player.hunger++;
-		count = -1;  
-		weatherTurn();
-		state.context.situation = currentWeather.message + " You hit start! 10 points for griffyndor!" ;
-		domUpdate(state);
-		stateUpdate(state);
-		drawAllOpts(defaultOpts, "opt");
-	}
-};
-
-var defaultOpts = [nextTurn, fishing, motivating];
-var fishOpts  = [];  
-var defaultOpts = [speech, fish, repair];
-//To Do: either make a standard suboption menu or delete these and not have suboptions
-var speechOpts = [inspire, overboard, teach];
-var fishOpts =  [oneLine, twoLines, help];
-var repairOpts = [subRepair];
-
-//This switches out the options based on on array of option objects
-function drawAllOpts (arr, classId){
-	var node;
-	var nodes = document.getElementsByClassName(classId);
-	for (var i = 0; i <nodes.length; i++)  {
-			node = nodes[i];   
-		if (arr[i] != null) {
-			node.style.visibility = "visible";
-			var handler = arr[i].funct;
-			node.textContent = arr[i].name;
-			node.removeEventListener('click', handlers[i], false);
-			node.addEventListener('click', handler);   
-			handlers[i] = handler;
-		}  else {
-			  node.style.visibility = "hidden";
-		}
-	}
+  
+  currentStats.forEach(function(value, index, array){
+    if(index != currentStats.length-1){
+        array[index] -= currentStats[currentStats.length-1]+1;
+      }
+    });
+    if (currentStats[0] >= 0){
+      currentStats[3] += 5;
+    } else {
+      currentStats[0] = 0;
+      currentStats[3] -= 10;
+    }
+    if (currentStats[3] <= 0){
+   document.body.innerHTML = "<h1>" + "Your crew threw you overboard!" + "</h1>" + "<h3>" + "Your crew mutinied against you on day " + currentDay +   " with a crew of " + currentStats[4] + " and an overall morale of " + currentStats[3] + ". You were still " + currentDistance + " miles from land." + "</h3>";  
+    }
+  updater();
 }  
 
-  
-//Here there be dragons...
-
-function dayTurn() {
-	day += 1;
-}
-  
-  //To Do: harmonize the weather settings with the reduced number of stats
-function weatherTurn() {	
-	var fairW = {
-		message:"the weather is fine. For that, we can be grateful. As for our overall situation...",
-		food: 0,
-		water: 0,
-		hull: 0,
-		thirst: 0,
-		hunger: 0,
-		morale: 0,
-		overboard: 0
-	};
-	
-	var lightS = {
-		message: "A light storm knocked some of our provisions overboard, along with a few other things...",
-		food: 0,
-		water: 0,
-		hull: 0,
-		thirst: 0,
-		hunger: 0,
-		morale: 0,
-		overboard: 0
-	};
-
-	var uniqueE = {
-		message: "By good fortune our raft has steered itself into a large school of flying fish! The fish propel themselves onto our boat and everyone has the chance to catch one. Perhaps we will survive after all... (morale increased, counts as meal)",
-		food: 0,
-		water: 0,
-		hull: 0,
-		thirst: 0,
-		hunger: 0,
-		morale: 0,
-		overboard: 0
-	}; 
-	
-	var weatherArray = [fairW, fairW, fairW, lightS, lightS, uniqueE];
-	var currentWeather = weatherArray[randomizer(0, weatherArray.length-1)];
-}
-
-
-//To Do: make the rules turn do something
-function rulesTurn(){ 
-	console.log("is ruleTurn even on?");
-	for (i = 0; i < survivorArray.length; i++){
-
-  }  
-
-}
-
-survPush(person);
- 
-function combiner(){
-	dayTurn();
-	weatherTurn();
-	rulesTurn();
-	domUpdate(state);
-	stateUpdate(state);
-	drawAllOpts(defaultOpts, "opt");
- }      
-  
-combiner();
-weatherTurn();
-rulesTurn();
-domUpdate(state);
-stateUpdate(state);
-
-
-
+updater();
+rules();
