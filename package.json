@@ -1,0 +1,26 @@
+{
+  "name": "rafttimes",
+  "version": "1.0.0",
+  "description": "Raft times, fun times on a raft",
+  "main": "index.js",
+  "dependencies": {
+    "express": "^4.11.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/DDunc/rafttimes.git"
+  },
+  "keywords": [
+    "game"
+  ],
+  "author": "DDunc",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/DDunc/rafttimes/issues"
+  },
+  "homepage": "https://github.com/DDunc/rafttimes"
+}
