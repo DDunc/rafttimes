@@ -193,4 +193,8 @@ optInit();
 }
 
 
+<<<<<<< HEAD
 initAll();
+=======
+initAll();
+>>>>>>> 8c45299df0e0c902a2d1c13a5ef822ffe9f60ec0
